@@ -40,6 +40,7 @@ app.UseRouting();
 //Dodajemo autorizaciju:
 app.UseAuthorization();
 
+//Ovo nam omogućava insertanje skripti unutar Razor stranica iz wwwroot-a
 app.MapStaticAssets();
 
 //ROUTING MEHANIZAM:
