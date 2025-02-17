@@ -2,10 +2,14 @@ using LeaveManagementSystem.Web.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
+//Program.cs konfigurira sve postavke koje su potrebne za pokretanje aplikacije!
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString =
+    builder.Configuration.GetConnectionString("DefaultConnection") ??
+    throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -16,6 +20,7 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+//MIDDLEWARE:
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -28,19 +33,23 @@ else
     app.UseHsts();
 }
 
+//Koristimo routing:
 app.UseHttpsRedirection();
 app.UseRouting();
 
+//Dodajemo autorizaciju:
 app.UseAuthorization();
 
 app.MapStaticAssets();
 
+//ROUTING MEHANIZAM:
 app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+    name: "default", //'default' je jedna routing konfiguracija
+    pattern: "{controller=Home}/{action=Index}/{id?}") //u patternu je definirano da će Controller imati ime prema kojem onda tražimo Action
     .WithStaticAssets();
 
 app.MapRazorPages()
    .WithStaticAssets();
 
+//Pokretanje aplikacije:
 app.Run();
