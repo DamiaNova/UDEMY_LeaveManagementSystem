@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LeaveManagementSystem.Web.Data
 {
@@ -16,6 +17,7 @@ namespace LeaveManagementSystem.Web.Data
         /// <summary>
         /// Name of the leave type
         /// </summary>
+        [Column(TypeName = "nvarchar(150)")]
         public string Name { get; set; }
 
         /// <summary>
