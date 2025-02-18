@@ -4,57 +4,72 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace LeaveManagementSystem.Web.Data.Migrations
 {
+    /// <summary>
+    /// Izvedena klasa koja nasljeđuje od bazne klase Migration.cs
+    /// Oznaka "partial" omogućuje da se definicija klase podijeli u više datoteka
+    /// ali se pri kompilaciji tretira kao jedna cjelina
+    /// </summary>
     public partial class CreateIdentitySchema : Migration
     {
-        protected override void Up(MigrationBuilder migrationBuilder)
+        /// <summary>
+        /// Metoda koja se može koristiti samo unutar bazne/izvedene klase (protected)
+        /// Također overridea inicijalnu logiku metode iz bazne klase (override)
+        /// </summary>
+        protected override void Up (MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
+            //Prva promjena u bazi podataka
+            migrationBuilder.CreateTable
+            (
+                //Kreiranje nove tablice za uloge:
                 name: "AspNetRoles",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false),
-                    Name = table.Column<string>(maxLength: 256, nullable: true),
-                    NormalizedName = table.Column<string>(maxLength: 256, nullable: true),
+                    Id               = table.Column<string>(nullable: false),
+                    Name             = table.Column<string>(maxLength: 256, nullable: true),
+                    NormalizedName   = table.Column<string>(maxLength: 256, nullable: true),
                     ConcurrencyStamp = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
+                    //Postavljanje primarnog ključa:
                     table.PrimaryKey("PK_AspNetRoles", x => x.Id);
-                });
+                }
+            );
 
+            //Kreiranje nove tablice za korisnike aplikacije:
             migrationBuilder.CreateTable(
                 name: "AspNetUsers",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false),
-                    UserName = table.Column<string>(maxLength: 256, nullable: true),
-                    NormalizedUserName = table.Column<string>(maxLength: 256, nullable: true),
-                    Email = table.Column<string>(maxLength: 256, nullable: true),
-                    NormalizedEmail = table.Column<string>(maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(nullable: false),
-                    PasswordHash = table.Column<string>(nullable: true),
-                    SecurityStamp = table.Column<string>(nullable: true),
-                    ConcurrencyStamp = table.Column<string>(nullable: true),
-                    PhoneNumber = table.Column<string>(nullable: true),
+                    Id                   = table.Column<string>(nullable: false),
+                    UserName             = table.Column<string>(maxLength: 256, nullable: true),
+                    NormalizedUserName   = table.Column<string>(maxLength: 256, nullable: true),
+                    Email                = table.Column<string>(maxLength: 256, nullable: true),
+                    NormalizedEmail      = table.Column<string>(maxLength: 256, nullable: true),
+                    EmailConfirmed       = table.Column<bool>(nullable: false),
+                    PasswordHash         = table.Column<string>(nullable: true),
+                    SecurityStamp        = table.Column<string>(nullable: true),
+                    ConcurrencyStamp     = table.Column<string>(nullable: true),
+                    PhoneNumber          = table.Column<string>(nullable: true),
                     PhoneNumberConfirmed = table.Column<bool>(nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(nullable: true),
-                    LockoutEnabled = table.Column<bool>(nullable: false),
-                    AccessFailedCount = table.Column<int>(nullable: false)
+                    TwoFactorEnabled     = table.Column<bool>(nullable: false),
+                    LockoutEnd           = table.Column<DateTimeOffset>(nullable: true),
+                    LockoutEnabled       = table.Column<bool>(nullable: false),
+                    AccessFailedCount    = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
                 });
 
+            //Kreiranje nove tablice za autorizaciju unutar uloga:
             migrationBuilder.CreateTable(
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    RoleId = table.Column<string>(nullable: false),
-                    ClaimType = table.Column<string>(nullable: true),
+                    Id         = table.Column<int>(nullable: false).Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    RoleId     = table.Column<string>(nullable: false),
+                    ClaimType  = table.Column<string>(nullable: true),
                     ClaimValue = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
@@ -68,14 +83,14 @@ namespace LeaveManagementSystem.Web.Data.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            //Kreiranje nove tablice za korisnike autorizacija uloga:
             migrationBuilder.CreateTable(
                 name: "AspNetUserClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    UserId = table.Column<string>(nullable: false),
-                    ClaimType = table.Column<string>(nullable: true),
+                    Id         = table.Column<int>(nullable: false).Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    UserId     = table.Column<string>(nullable: false),
+                    ClaimType  = table.Column<string>(nullable: true),
                     ClaimValue = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
@@ -89,14 +104,15 @@ namespace LeaveManagementSystem.Web.Data.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            //Kreiranje nove tablice za login podatke:
             migrationBuilder.CreateTable(
                 name: "AspNetUserLogins",
                 columns: table => new
                 {
-                    LoginProvider = table.Column<string>(maxLength: 128, nullable: false),
-                    ProviderKey = table.Column<string>(maxLength: 128, nullable: false),
+                    LoginProvider       = table.Column<string>(maxLength: 128, nullable: false),
+                    ProviderKey         = table.Column<string>(maxLength: 128, nullable: false),
                     ProviderDisplayName = table.Column<string>(nullable: true),
-                    UserId = table.Column<string>(nullable: false)
+                    UserId              = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -133,14 +149,15 @@ namespace LeaveManagementSystem.Web.Data.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            //Kreiranje nove tablice za tokene:
             migrationBuilder.CreateTable(
                 name: "AspNetUserTokens",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(nullable: false),
+                    UserId        = table.Column<string>(nullable: false),
                     LoginProvider = table.Column<string>(maxLength: 128, nullable: false),
-                    Name = table.Column<string>(maxLength: 128, nullable: false),
-                    Value = table.Column<string>(nullable: true)
+                    Name          = table.Column<string>(maxLength: 128, nullable: false),
+                    Value         = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -153,10 +170,11 @@ namespace LeaveManagementSystem.Web.Data.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            //Indeksi u bazama podataka služe za ubrzavanje pretrage podataka u tablicama; omogućuju brži pristup podacima
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
-                column: "RoleId");
+                column: "RoleId"); //indeks se postavlja na ovo polje kako bi se ubrzala pretraga po tom polju
 
             migrationBuilder.CreateIndex(
                 name: "RoleNameIndex",
@@ -193,8 +211,13 @@ namespace LeaveManagementSystem.Web.Data.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
         }
 
+        /// <summary>
+        /// Metoda koja se može koristiti samo unutar bazne/izvedene klase (protected)
+        /// Također overridea inicijalnu logiku metode iz bazne klase (override)
+        /// </summary>
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            //Brisanje svih novokreiranih tablica:
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 

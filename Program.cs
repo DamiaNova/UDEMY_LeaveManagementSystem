@@ -5,13 +5,13 @@ using Microsoft.EntityFrameworkCore;
 //Program.cs konfigurira sve postavke koje su potrebne za pokretanje aplikacije!
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+//ConnectionString 'DefaultConnection' je definiran u appsettings.json fileu:
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection") ??
     throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+//Dohvaćanje DatabaseContexta --> klase koja sadrži model naše baze podataka:
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
