@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Metadata.Ecma335;
 
 namespace LeaveManagementSystem.Web.Data
 {
@@ -16,5 +17,12 @@ namespace LeaveManagementSystem.Web.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
+
+        /// <summary>
+        /// Property data tipa koji ima entity tipa LeaveType
+        /// Kreiramo prikaz seta entiteta tipa LeaveType
+        /// Naziv tablice u bazi: LeaveTypes (plural)
+        /// </summary>
+        public DbSet<LeaveType> LeaveTypes { get; set; }
     }
 }
