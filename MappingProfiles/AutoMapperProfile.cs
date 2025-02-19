@@ -20,6 +20,13 @@ namespace LeaveManagementSystem.Web.MappingProfiles
             //tada koristimo metodu ForMember kojom Automapperu kažemo koji properties su povezani:
             CreateMap<LeaveType, LeaveTypeReadOnlyVM>()
                 .ForMember(dest => dest.Days, opt => opt.MapFrom(src => src.NumberOfDays));
+
+            //Mapiranje za novi VM: LeaveTypeCreateVM
+            //Prvi ulazni parametar je LeaveTypeCreateVM zato što je to rezultat POST metode
+            //u prijevodu: to je tip podatke kojeg ćemo dobiti iz FORM-a na razor viewu
+            //a onda taj tip podatke iz FORM-a želimo konvertirati u data-model kako bismo
+            //mogli odraditi INSERT u tablicu LeaveTypes na bazi podataka
+            CreateMap<LeaveTypeCreateVM, LeaveType>();
         }
     }
 }

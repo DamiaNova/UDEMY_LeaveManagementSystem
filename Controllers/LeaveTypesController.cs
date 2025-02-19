@@ -9,6 +9,7 @@ using LeaveManagementSystem.Web.Data;
 using LeaveManagementSystem.Web.Models.LeaveTypes;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Manage.Internal;
+using LeaveManagementSystem.Web.MappingProfiles;
 
 namespace LeaveManagementSystem.Web.Controllers
 {
@@ -55,7 +56,7 @@ namespace LeaveManagementSystem.Web.Controllers
             {
                 Id = x.Id,
                 Name = x.Name,
-                Days = x.NumberOfDays
+                NumberOfDays = x.NumberOfDays
             });
             */
 
@@ -110,17 +111,21 @@ namespace LeaveManagementSystem.Web.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken] //zaštita od cross-referencing napada
-        public async Task<IActionResult> Create([Bind("Id,Name,NumberOfDays")] LeaveType leaveType)
+        public async Task<IActionResult> Create([Bind("Name,NumberOfDays")] LeaveTypeCreateVM viewModelData) //ili Create(LeaveTypeCreateVM viewModelData)
         {
             if (ModelState.IsValid) //ako je forma ispravno popunjena:
             {
-                _context.Add(leaveType);
+                //Konverzija iz tipa podatka kojeg je vratila FORM-a u tip podatke za bazu podataka:
+                var dataModel = _autoMapper.Map<LeaveType>(viewModelData);
+
+                //Spremanje na bazu:
+                _context.Add(dataModel);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index)); //preusmjeravanje na Index stranicu
             }
 
             //Ako uneseni podaci nisu validni ponovno otvori Create view sa tim podacima:
-            return View(leaveType);
+            return View(viewModelData);
         }
 
         /// <summary>
