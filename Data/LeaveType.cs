@@ -5,7 +5,7 @@ namespace LeaveManagementSystem.Web.Data
 {
     /// <summary>
     /// Data Model za rad sa novom tablicom LEAVE_TYPE
-    /// </summary>
+    /// </summary> 
     public class LeaveType
     {
         /// <summary>

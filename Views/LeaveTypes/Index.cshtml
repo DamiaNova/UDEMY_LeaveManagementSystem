@@ -7,7 +7,8 @@
 <h1>Index</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    @* Ovaj anchor-tag ima tag-helper koji kaže ako je kliknuto onda idi na akciju "Create" *@
+    <a asp-action="Create" class="btn btn-primary">Create New</a>
 </p>
 <table class="table">
     <thead>
@@ -31,9 +32,10 @@
                 @Html.DisplayFor(modelItem => item.NumberOfDays)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                @* Ovi anchor-tagovi vode do određenih actiona a pritom prosljeđuju ID sloga *@
+                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning">Edit</a>
+                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info">Details</a>
+                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger">Delete</a>
             </td>
         </tr>
 }
