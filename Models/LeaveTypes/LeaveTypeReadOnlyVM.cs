@@ -6,9 +6,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace LeaveManagementSystem.Web.Models.LeaveTypes
 {
     /// <summary>
-    /// View-model klasa koja se koristi isključivo za Index view model
+    /// View-model klasa koja se koristi SAMO za prikaz podataka iz data-modela
     /// </summary>
-    public class IndexVM
+    public class LeaveTypeReadOnlyVM
     {
         #region Properties
         /// <summary>

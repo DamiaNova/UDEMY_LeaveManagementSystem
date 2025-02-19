@@ -18,7 +18,7 @@ namespace LeaveManagementSystem.Web.MappingProfiles
             //Automatikom se matchaju tipovi i imena (ako su isti), no u slučaju kada
             //unutar našeg view-modela nemamo isti naziv propertyja koji je u data-modelu
             //tada koristimo metodu ForMember kojom Automapperu kažemo koji properties su povezani:
-            CreateMap<LeaveType, IndexVM>()
+            CreateMap<LeaveType, LeaveTypeReadOnlyVM>()
                 .ForMember(dest => dest.Days, opt => opt.MapFrom(src => src.NumberOfDays));
         }
     }

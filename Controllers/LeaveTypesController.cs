@@ -51,7 +51,7 @@ namespace LeaveManagementSystem.Web.Controllers
             //Znači, za svaki slog koji se dohvat iz baze želim kreirati novu instancu view-model klase:
 
             /* RUČNA KONVERZIJA:
-            var viewData = data.Select(x => new IndexVM
+            var viewData = data.Select(x => new LeaveTypeReadOnlyVM
             {
                 Id = x.Id,
                 Name = x.Name,
@@ -60,8 +60,8 @@ namespace LeaveManagementSystem.Web.Controllers
             */
 
             //AUTOMAPPER KONVERZIJA:
-            //Mapira se data (data-model) u listu view-modela
-            var viewData = _autoMapper.Map<List<IndexVM>>(data);
+            //Mapira se data (data-model) u listu view-model instanca:
+            var viewData = _autoMapper.Map<List<LeaveTypeReadOnlyVM>>(data);
 
             //2.korak: Prosljeđivanje instance klase view-modela u view            
             return View(viewData);
@@ -81,16 +81,19 @@ namespace LeaveManagementSystem.Web.Controllers
 
             //Ovdje pretražujemo našu tablicu i dohvaćamo slog sa ID=5:
             //SELECT * FROM LeaveTypes WHERE ID=5;
-            var leaveType = await _context.LeaveTypes.FirstOrDefaultAsync(m => (m.Id == id));
+            var dataModelInstance = await _context.LeaveTypes.FirstOrDefaultAsync(m => (m.Id == id));            
 
             //Ako ne pronalazimo takav slog u tablici onda baci 404:
-            if (leaveType == null)
+            if (dataModelInstance == null)
             {
                 return NotFound();
             }
 
+            //Konverzija u view-model instancu klase
+            var viewModelInstance = _autoMapper.Map<LeaveTypeReadOnlyVM>(dataModelInstance);
+
             //Ako dohvatimo podatke sa baze onda preusmjeri na view:
-            return View(leaveType);
+            return View(viewModelInstance);
         }
 
         /// <summary>
