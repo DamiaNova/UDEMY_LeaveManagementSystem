@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using LeaveManagementSystem.Web.Data;
+using LeaveManagementSystem.Web.Models.LeaveTypes;
+using AutoMapper;
+using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Manage.Internal;
 
 namespace LeaveManagementSystem.Web.Controllers
 {
@@ -21,11 +24,17 @@ namespace LeaveManagementSystem.Web.Controllers
         private readonly ApplicationDbContext _context;
 
         /// <summary>
+        /// Private field za Dependency injection, koristi se za pristup Automapperu
+        /// </summary>
+        private readonly IMapper _autoMapper;
+
+        /// <summary>
         /// Custom konstruktor koji postavlja objekt DbContext
         /// </summary>
-        public LeaveTypesController(ApplicationDbContext context)
+        public LeaveTypesController(ApplicationDbContext context, IMapper autoMapper)
         {
             _context = context;
+            _autoMapper = autoMapper;
         }
         #endregion
 
@@ -37,8 +46,25 @@ namespace LeaveManagementSystem.Web.Controllers
             //Koristi se lokalna (private) konekcija na bazu da bi se dohvatila lista slogova iz tablice:
             //var data = SELECT * FROM LeaveTypes;
             var data = await _context.LeaveTypes.ToListAsync();
-            
-            return View(data);
+
+            //1.korak: Konverzija data-modela (LeaveType.cs instanca) u view-model
+            //Znači, za svaki slog koji se dohvat iz baze želim kreirati novu instancu view-model klase:
+
+            /* RUČNA KONVERZIJA:
+            var viewData = data.Select(x => new IndexVM
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Days = x.NumberOfDays
+            });
+            */
+
+            //AUTOMAPPER KONVERZIJA:
+            //Mapira se data (data-model) u listu view-modela
+            var viewData = _autoMapper.Map<List<IndexVM>>(data);
+
+            //2.korak: Prosljeđivanje instance klase view-modela u view            
+            return View(viewData);
         }
 
         /// <summary>

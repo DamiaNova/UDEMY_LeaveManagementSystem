@@ -1,4 +1,5 @@
-﻿@model IEnumerable<LeaveManagementSystem.Web.Data.LeaveType>
+﻿@using LeaveManagementSystem.Web.Models.LeaveTypes;
+@model IEnumerable<IndexVM>
 
 @{
     ViewData["Title"] = "Index";
@@ -17,7 +18,7 @@
                 @Html.DisplayNameFor(model => model.Name)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.NumberOfDays)
+                @Html.DisplayNameFor(model => model.Days)
             </th>
             <th></th>
         </tr>
@@ -29,7 +30,7 @@
                 @Html.DisplayFor(modelItem => item.Name)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.NumberOfDays)
+                @Html.DisplayFor(modelItem => item.Days)
             </td>
             <td>
                 @* Ovi anchor-tagovi vode do određenih actiona a pritom prosljeđuju ID sloga *@

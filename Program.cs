@@ -1,6 +1,7 @@
 using LeaveManagementSystem.Web.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 //Program.cs konfigurira sve postavke koje su potrebne za pokretanje aplikacije!
 var builder = WebApplication.CreateBuilder(args);
@@ -10,14 +11,19 @@ var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection") ??
     throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
+//DEPENDENCY INJECTION CONTAINER:
 //Dohvaćanje DatabaseContexta --> klase koja sadrži model naše baze podataka:
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+//Dodavanje Servicea za Automapper (Assembly.GetExecutingAssembly() pretražuje cijeli projekt za Automapper profilom):
+builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 
+//Svi services moraju biti postavljeni prije izvođenja ove linije koda:
 var app = builder.Build();
 
 //MIDDLEWARE:
