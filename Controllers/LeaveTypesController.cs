@@ -113,7 +113,13 @@ namespace LeaveManagementSystem.Web.Controllers
         [ValidateAntiForgeryToken] //zaštita od cross-referencing napada
         public async Task<IActionResult> Create([Bind("Name,NumberOfDays")] LeaveTypeCreateVM viewModelData) //ili Create(LeaveTypeCreateVM viewModelData)
         {
-            if (ModelState.IsValid) //ako je forma ispravno popunjena:
+            //Primjer kreiranja dodatne validacije:
+            if (viewModelData.Name.Contains("Vacation"))
+            {
+                ModelState.AddModelError(nameof(viewModelData.Name), "Name should not contain \"Vacation\"!");
+            }
+
+            if (ModelState.IsValid) //server-side validation
             {
                 //Konverzija iz tipa podatka kojeg je vratila FORM-a u tip podatke za bazu podataka:
                 var dataModel = _autoMapper.Map<LeaveType>(viewModelData);
