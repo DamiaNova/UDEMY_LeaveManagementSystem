@@ -25,8 +25,13 @@ namespace LeaveManagementSystem.Web.MappingProfiles
             //Prvi ulazni parametar je LeaveTypeCreateVM zato što je to rezultat POST metode
             //u prijevodu: to je tip podatke kojeg ćemo dobiti iz FORM-a na razor viewu
             //a onda taj tip podatke iz FORM-a želimo konvertirati u data-model kako bismo
-            //mogli odraditi INSERT u tablicu LeaveTypes na bazi podataka
+            //mogli odraditi INSERT u tablicu LeaveTypes na bazi podataka:
             CreateMap<LeaveTypeCreateVM, LeaveType>();
+
+            //POST metoda uzima vm iz forme i šalje ga u bazu kao data-model
+            //GET metoda dohvaća sa baze podataka u VM za prikaz na ekranu:
+            //Zato koristimo metodu ReverseMap() koja omogućuje da mapiranje ide u oba smjera
+            CreateMap<LeaveTypeEditVM, LeaveType>().ReverseMap();
         }
     }
 }

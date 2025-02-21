@@ -155,8 +155,11 @@ namespace LeaveManagementSystem.Web.Controllers
                 return NotFound();
             }
 
+            //Mapiranje iz data-modela u view-model za prikaz na razor viewu:
+            var viewModel = _autoMapper.Map<LeaveTypeEditVM>(leaveType);
+
             //Pozovi razor view za pronađeni slog na bazi:
-            return View(leaveType);
+            return View(viewModel);
         }
 
         /// <summary>
@@ -164,11 +167,11 @@ namespace LeaveManagementSystem.Web.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,NumberOfDays")] LeaveType leaveType)
+        public async Task<IActionResult> Edit(int id, LeaveTypeEditVM viewModel)
         {
             //Ako iz nekog razloga ne proslijedimo ID
             //sloga kojeg želimo ažurirati na bazi onda baci 404:
-            if (id != leaveType.Id)
+            if (id != viewModel.Id)
             {
                 return NotFound();
             }
@@ -178,14 +181,17 @@ namespace LeaveManagementSystem.Web.Controllers
             {
                 try
                 {
+                    //Mapiranje iz view-modela u data-model:
+                    var dataModel = _autoMapper.Map<LeaveType>(viewModel);
+
                     //Ažuriranje sloga na bazi:
-                    _context.Update(leaveType);
+                    _context.Update(dataModel);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     //Ako dođe do nekog exceptiona na bazi:
-                    if (!LeaveTypeExists(leaveType.Id))
+                    if (!LeaveTypeExists(viewModel.Id))
                     {
                         return NotFound();
                     }
@@ -198,7 +204,7 @@ namespace LeaveManagementSystem.Web.Controllers
             }
 
             //Ako spremanje na bazu prođe u redu vrati se na view:
-            return View(leaveType);
+            return View(viewModel);
         }
 
         /// <summary>
