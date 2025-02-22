@@ -1,4 +1,5 @@
 using LeaveManagementSystem.Web.Data;
+using LeaveManagementSystem.Web.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
@@ -18,6 +19,9 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 //Dodavanje Servicea za Automapper (Assembly.GetExecutingAssembly() pretražuje cijeli projekt za Automapper profilom):
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+
+//Registracija service-layera za tablicu LEAVE_TYPE (prvo: contract, drugo: implementation)
+builder.Services.AddScoped<ILeaveTypesService, LeaveTypesService>();
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();

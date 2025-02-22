@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using LeaveManagementSystem.Web.Data;
 using LeaveManagementSystem.Web.Models.LeaveTypes;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 
 namespace LeaveManagementSystem.Web.Services;
@@ -8,7 +9,8 @@ namespace LeaveManagementSystem.Web.Services;
 /// <summary>
 /// Service layer za tablicu LEAVE_TYPES
 /// </summary>
-public class LeaveTypesService(IMapper mapper, ApplicationDbContext context) //skraćena oznaka za custom DI konstruktor
+public class LeaveTypesService(IMapper mapper, ApplicationDbContext context) : ILeaveTypesService
+//skraćena oznaka za custom DI konstruktor
 {
     #region Dependency injection fields
     /// <summary>
@@ -22,7 +24,13 @@ public class LeaveTypesService(IMapper mapper, ApplicationDbContext context) //s
     private readonly ApplicationDbContext _context;
     #endregion
 
-    #region Methods za rad sa bazom podataka
+    #region Fields, properties
+
+    private const string _nameExistsValidationMessage = "This leave type already exists in the database!";
+
+    #endregion
+
+    #region Methods za rad sa bazom podataka (CRUD operacije)
 
     /// <summary>
     /// Dohvat svih slogova iz tablice LEAVE_TYPE
@@ -44,7 +52,7 @@ public class LeaveTypesService(IMapper mapper, ApplicationDbContext context) //s
     public async Task<T?> GetRecordAsync<T>(int id) where T : class
     {
         //select * from LEAVE_TYPE where id = i_id;
-        var dataModel = await _context.LeaveTypes.FirstOrDefaultAsync(x => x.Id .Equals(id));
+        var dataModel = await _context.LeaveTypes.FirstOrDefaultAsync(x => x.Id.Equals(id));
 
         //Ako nema sloga sa zadanim ID-om na bazi onda baci 404:
         if (dataModel == null)
@@ -74,7 +82,45 @@ public class LeaveTypesService(IMapper mapper, ApplicationDbContext context) //s
 
             //Spremi promjene na bazi:
             await _context.SaveChangesAsync();
-        }        
+        }
+    }
+
+    /// <summary>
+    /// Asinkrona metoda za ažuriranje sloga u tablici na bazi
+    /// </summary>
+    public async Task UpdateRecordInDatabase(LeaveTypeEditVM viewModelRecord)
+    {
+        //VALIDACIJA?
+
+        #region Spremanje na bazu
+        //Mapiranje iz view-modela u data-model:
+        var dataModelRecord = _mapper.Map<LeaveType>(viewModelRecord);
+
+        //Ažuriranje sloga na bazi:
+        _context.Update(dataModelRecord);
+
+        //Spremanje promjena na bazi:
+        await _context.SaveChangesAsync();
+        #endregion
+    }
+
+    /// <summary>
+    /// Asinkrona metoda za insert sloga u tablicu na bazi
+    /// </summary>
+    public async Task CreateRecordInDatabase(LeaveTypeCreateVM viewModelRecord)
+    {
+        //VALIDACIJA?
+
+        #region Spremanje na bazu
+        //Mapiranje iz view-modela u data-model:
+        var dataModelRecord = _mapper.Map<LeaveType>(viewModelRecord);
+
+        //Insertanje sloga na bazu:
+        _context.Add(dataModelRecord);
+
+        //Spremanje promjena na bazi:
+        await _context.SaveChangesAsync();
+        #endregion
     }
     #endregion
 
