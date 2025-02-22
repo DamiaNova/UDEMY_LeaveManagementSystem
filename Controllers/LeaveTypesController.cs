@@ -51,27 +51,13 @@ namespace LeaveManagementSystem.Web.Controllers
         /// </summary>
         public async Task<IActionResult> Index()
         {
-            //Koristi se lokalna (private) konekcija na bazu da bi se dohvatila lista slogova iz tablice:
             //var data = SELECT * FROM LeaveTypes;
             var data = await _context.LeaveTypes.ToListAsync();
 
-            //1.korak: Konverzija data-modela (LeaveType.cs instanca) u view-model
-            //Znači, za svaki slog koji se dohvat iz baze želim kreirati novu instancu view-model klase:
-
-            /* RUČNA KONVERZIJA:
-            var viewData = data.Select(x => new LeaveTypeReadOnlyVM
-            {
-                Id = x.Id,
-                Name = x.Name,
-                NumberOfDays = x.NumberOfDays
-            });
-            */
-
-            //AUTOMAPPER KONVERZIJA:
             //Mapira se data (data-model) u listu view-model instanca:
             var viewData = _autoMapper.Map<List<LeaveTypeReadOnlyVM>>(data);
 
-            //2.korak: Prosljeđivanje instance klase view-modela u view            
+            //Proslijeđivanje instance klase view-modela u view            
             return View(viewData);
         }
 
