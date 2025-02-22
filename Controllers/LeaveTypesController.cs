@@ -220,7 +220,7 @@ namespace LeaveManagementSystem.Web.Controllers
             }
 
             //Pronađi željeni slog za proslijeđivanje viewu:
-            var leaveType = await _context.LeaveTypes.FirstOrDefaultAsync(m => m.Id == id);
+            var leaveType = await _context.LeaveTypes.FirstOrDefaultAsync(m => m.Id == id);            
 
             //Ako se na bazi ne pronađe slog onda baci 404:
             if (leaveType == null)
@@ -228,8 +228,11 @@ namespace LeaveManagementSystem.Web.Controllers
                 return NotFound();
             }
 
+            //Mapiranje:
+            var viewModel = _autoMapper.Map<LeaveTypeReadOnlyVM>(leaveType);
+
             //Prikaži view sa pronađenim slogom sa baze:
-            return View(leaveType);
+            return View(viewModel);
         }
 
         /// <summary>

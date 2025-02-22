@@ -6,16 +6,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace LeaveManagementSystem.Web.Models.LeaveTypes
 {
     /// <summary>
-    /// View-model klasa koja se koristi SAMO za prikaz podataka iz data-modela
+    /// View-model izvedena klasa koja se koristi SAMO za prikaz podataka iz data-modela
     /// </summary>
-    public class LeaveTypeReadOnlyVM
+    public class LeaveTypeReadOnlyVM : BaseLeaveTypeVM
     {
         #region Properties
-        /// <summary>
-        /// Primary key: ID
-        /// </summary>
-        public int Id { get; set; }
-
         /// <summary>
         /// Name of the leave type
         /// </summary>
@@ -24,6 +19,7 @@ namespace LeaveManagementSystem.Web.Models.LeaveTypes
         /// <summary>
         /// Number of days that the leave type has
         /// </summary>
+        [Display(Name = "Maximum allocation of days")]
         public int Days { get; set; }
         #endregion
     }

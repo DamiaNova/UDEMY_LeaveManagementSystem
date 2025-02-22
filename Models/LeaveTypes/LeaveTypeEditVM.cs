@@ -6,15 +6,9 @@ namespace LeaveManagementSystem.Web.Models.LeaveTypes
     /// <summary>
     /// View-model klasa za rad sa Edit viewom
     /// </summary>
-    public class LeaveTypeEditVM
+    public class LeaveTypeEditVM : BaseLeaveTypeVM
     {
         #region Properties
-        /// <summary>
-        /// Primary key: ID
-        /// </summary>
-        [Required]
-        public int Id { get; set; }
-
         /// <summary>
         /// Name of the leave type
         /// </summary>
@@ -27,6 +21,7 @@ namespace LeaveManagementSystem.Web.Models.LeaveTypes
         /// </summary>
         [Required] //oznaka za obavezno polje
         [Range(1, 90)] //min: 1 dan, max: 90 dana
+        [Display(Name = "Maximum allocation of days")]
         public int NumberOfDays { get; set; }
         #endregion
     }

@@ -20,6 +20,7 @@ namespace LeaveManagementSystem.Web.Models.LeaveTypes
         /// </summary>
         [Required] //oznaka za obavezno polje
         [Range(1,90)] //min: 1 dan, max: 90 dana
+        [Display(Name="Maximum allocation of days")]
         public int NumberOfDays { get; set; }
         #endregion
     }
