@@ -8,22 +8,10 @@ namespace LeaveManagementSystem.Web.Services;
 
 /// <summary>
 /// Service layer za tablicu LEAVE_TYPES
+/// Dependency injectali smo mapper i dbcontext odmah ispod:
 /// </summary>
-public class LeaveTypesService(IMapper mapper, ApplicationDbContext context) : ILeaveTypesService
-//skraćena oznaka za custom DI konstruktor
+public class LeaveTypesService(IMapper _mapper, ApplicationDbContext _context) : ILeaveTypesService
 {
-    #region Dependency injection fields
-    /// <summary>
-    /// Private field za Dependency injection, koristi se za pristup Automapperu
-    /// </summary>
-    private readonly IMapper _mapper;
-
-    /// <summary>
-    /// Privatan field za pristup DbContextu
-    /// </summary>
-    private readonly ApplicationDbContext _context;
-    #endregion
-
     #region Fields, properties
 
     private const string _nameExistsValidationMessage = "This leave type already exists in the database!";
@@ -129,7 +117,7 @@ public class LeaveTypesService(IMapper mapper, ApplicationDbContext context) : I
     /// <summary>
     /// Metoda za provjeru postoji li već tip odsustva s posla u bazi podataka
     /// </summary>
-    private async Task<bool> CheckIfLeaveTypeNameExists(string name)
+    public async Task<bool> CheckIfLeaveTypeNameExists(string name)
     {
         var nameLowercase = name.ToLower();
 
@@ -141,13 +129,21 @@ public class LeaveTypesService(IMapper mapper, ApplicationDbContext context) : I
     /// <summary>
     /// TRUE = Leave type objekt sa tim nazivom VEĆ postoji na bazi i ima drugačiji ID od sloga kojeg mi pokušavamo ažurirati
     /// </summary>
-    private async Task<bool> NameAlreadyExistsInTheDatabaseUnderDifferentID(LeaveTypeEditVM editedObject)
+    public async Task<bool> NameAlreadyExistsInTheDatabaseUnderDifferentID(LeaveTypeEditVM editedObject)
     {
         //Ako se mijenja ID=5 gdje je naziv="Vacation" u naziv="Bolovanje" ali Bolovanje (sa ID=7) već postoji na bazi --> vrati TRUE!
         var editedNameLowercase = editedObject.Name.ToLower();
 
         //Ako se na bazi pronađe slog sa istim nazivom ALI drugačijim ID-em onda se vraća TRUE:
         return await _context.LeaveTypes.AnyAsync(x => x.Name.ToLower().Equals(editedNameLowercase) && x.Id != editedObject.Id);
+    }
+
+    /// <summary>
+    /// Metoda koja provjerava postoji sloga sa određenim ID-em u našoj tablici na bazi
+    /// </summary>
+    public bool LeaveTypeExists(int id)
+    {
+        return (_context.LeaveTypes.Any(e => e.Id == id));
     }
     #endregion
 }

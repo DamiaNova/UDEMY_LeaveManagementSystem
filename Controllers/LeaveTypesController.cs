@@ -11,6 +11,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Manage.Internal;
 using LeaveManagementSystem.Web.MappingProfiles;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using LeaveManagementSystem.Web.Services;
 
 namespace LeaveManagementSystem.Web.Controllers
 {
@@ -21,22 +22,16 @@ namespace LeaveManagementSystem.Web.Controllers
     {
         #region Dependency injection
         /// <summary>
-        /// Privatan field za pristup DbContextu
+        /// Field za contract servicea
         /// </summary>
-        private readonly ApplicationDbContext _context;
+        private readonly ILeaveTypesService _service;
 
         /// <summary>
-        /// Private field za Dependency injection, koristi se za pristup Automapperu
+        /// Custom konstruktor koji postavlja service
         /// </summary>
-        private readonly IMapper _autoMapper;
-
-        /// <summary>
-        /// Custom konstruktor koji postavlja objekt DbContext
-        /// </summary>
-        public LeaveTypesController(ApplicationDbContext context, IMapper autoMapper)
+        public LeaveTypesController(ILeaveTypesService service)
         {
-            _context = context;
-            _autoMapper = autoMapper;
+            _service = service;
         }
         #endregion
 
@@ -51,11 +46,13 @@ namespace LeaveManagementSystem.Web.Controllers
         /// </summary>
         public async Task<IActionResult> Index()
         {
-            //var data = SELECT * FROM LeaveTypes;
-            var data = await _context.LeaveTypes.ToListAsync();
+            //Poziv servicea kako bi dohvatili sve zapise iz tablice sa baze:
+            var viewData = await _service.GetAllRecords();
 
-            //Mapira se data (data-model) u listu view-model instanca:
-            var viewData = _autoMapper.Map<List<LeaveTypeReadOnlyVM>>(data);
+            if (viewData == null)
+            {
+                return NotFound();
+            }
 
             //Proslijeđivanje instance klase view-modela u view            
             return View(viewData);
@@ -73,21 +70,16 @@ namespace LeaveManagementSystem.Web.Controllers
                 return NotFound();
             }
 
-            //Ovdje pretražujemo našu tablicu i dohvaćamo slog sa ID=5:
-            //SELECT * FROM LeaveTypes WHERE ID=5;
-            var dataModelInstance = await _context.LeaveTypes.FirstOrDefaultAsync(m => (m.Id == id));            
+            //Poziv servicea kako bi dohvatili određeni zapis iz baze:
+            var viewModel = await _service.GetRecordAsync<LeaveTypeReadOnlyVM>(id.Value);
 
-            //Ako ne pronalazimo takav slog u tablici onda baci 404:
-            if (dataModelInstance == null)
+            if (viewModel == null)
             {
                 return NotFound();
             }
 
-            //Konverzija u view-model instancu klase
-            var viewModelInstance = _autoMapper.Map<LeaveTypeReadOnlyVM>(dataModelInstance);
-
             //Ako dohvatimo podatke sa baze onda preusmjeri na view:
-            return View(viewModelInstance);
+            return View(viewModel);
         }
 
         /// <summary>
@@ -108,19 +100,16 @@ namespace LeaveManagementSystem.Web.Controllers
         {
             //Provjera da li vrsta odsustva s posla već postoji u bazi prije dodavanja:
             //Npr. ako u bazi već postoji vrsta "Bolovanje" onda nema potrebe za novim dodavanjem
-            if (await CheckIfLeaveTypeNameExists(viewModelData.Name))
+            if (await _service.CheckIfLeaveTypeNameExists(viewModelData.Name))
             {
                 ModelState.AddModelError(nameof(viewModelData.Name), _nameExistsValidationMessage);
             }
 
             if (ModelState.IsValid) //server-side validation
             {
-                //Konverzija iz tipa podatka kojeg je vratila FORM-a u tip podatke za bazu podataka:
-                var dataModel = _autoMapper.Map<LeaveType>(viewModelData);
+                //Poziv servicea kako bi spremili zapis na bazu:
+                await _service.CreateRecordInDatabase(viewModelData);
 
-                //Spremanje na bazu:
-                _context.Add(dataModel);
-                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index)); //preusmjeravanje na Index stranicu
             }
 
@@ -140,17 +129,13 @@ namespace LeaveManagementSystem.Web.Controllers
                 return NotFound();
             }
 
-            //SELECT * FROM LeaveTypes WHERE ID = 5;
-            var leaveType = await _context.LeaveTypes.FindAsync(id);
+            //Poziv servicea kako bi dohvatili određeni zapis iz baze:
+            var viewModel = await _service.GetRecordAsync<LeaveTypeEditVM>((int)id);
 
-            //Ako nema sloga sa zadanim ID-om na bazi onda baci 404:
-            if (leaveType == null)
+            if (viewModel == null)
             {
                 return NotFound();
             }
-
-            //Mapiranje iz data-modela u view-model za prikaz na razor viewu:
-            var viewModel = _autoMapper.Map<LeaveTypeEditVM>(leaveType);
 
             //Pozovi razor view za pronađeni slog na bazi:
             return View(viewModel);
@@ -171,7 +156,7 @@ namespace LeaveManagementSystem.Web.Controllers
             }
 
             //Provjera da li se editira objekt tipa ako se mijenja iz "Vacation",ID=5 u "Bolovanje",ID=5 a recimo da Bolovanje-slog već postoji u bazi:
-            if (await NameAlreadyExistsInTheDatabaseUnderDifferentID(viewModel))
+            if (await _service.NameAlreadyExistsInTheDatabaseUnderDifferentID(viewModel))
             {
                 ModelState.AddModelError(nameof(viewModel.Name), _nameExistsValidationMessage);
             }
@@ -181,17 +166,13 @@ namespace LeaveManagementSystem.Web.Controllers
             {
                 try
                 {
-                    //Mapiranje iz view-modela u data-model:
-                    var dataModel = _autoMapper.Map<LeaveType>(viewModel);
-
-                    //Ažuriranje sloga na bazi:
-                    _context.Update(dataModel);
-                    await _context.SaveChangesAsync();
+                    //Poziv servicea kako bi ažurirali zapis na bazi:
+                    await _service.UpdateRecordInDatabase(viewModel);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     //Ako dođe do nekog exceptiona na bazi:
-                    if (!LeaveTypeExists(viewModel.Id))
+                    if (!_service.LeaveTypeExists(viewModel.Id))
                     {
                         return NotFound();
                     }
@@ -219,17 +200,13 @@ namespace LeaveManagementSystem.Web.Controllers
                 return NotFound();
             }
 
-            //Pronađi željeni slog za proslijeđivanje viewu:
-            var leaveType = await _context.LeaveTypes.FirstOrDefaultAsync(m => m.Id == id);            
+            //Poziv servicea kako bi dohvatili određeni zapis iz baze:
+            var viewModel = await _service.GetRecordAsync<LeaveTypeReadOnlyVM>((int)id);
 
-            //Ako se na bazi ne pronađe slog onda baci 404:
-            if (leaveType == null)
+            if (viewModel == null)
             {
                 return NotFound();
             }
-
-            //Mapiranje:
-            var viewModel = _autoMapper.Map<LeaveTypeReadOnlyVM>(leaveType);
 
             //Prikaži view sa pronađenim slogom sa baze:
             return View(viewModel);
@@ -244,54 +221,9 @@ namespace LeaveManagementSystem.Web.Controllers
         [ValidateAntiForgeryToken] //zato što je akcija pozvana iz FORM-a
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            //Pronalazak određenog sloga na bazi:
-            var leaveType = await _context.LeaveTypes.FindAsync(id);
-
-            //Ako pronađemo željeni slog na bazi:
-            if (leaveType != null)
-            {
-                //onda ga obriši sa baze:
-                _context.LeaveTypes.Remove(leaveType);
-            }
-
-            //Spremi promjene na bazi:
-            await _context.SaveChangesAsync();
+            //Poziv servicea kako bi obrisali određeni zapis iz baze:
+            await _service.DeteleRecordAsync(id);
             return RedirectToAction(nameof(Index));
         }
-
-        /// <summary>
-        /// Metoda koja provjerava postoji sloga sa određenim ID-em u našoj tablici na bazi
-        /// </summary>
-        private bool LeaveTypeExists(int id)
-        {
-            return _context.LeaveTypes.Any(e => e.Id == id);
-        }
-
-        #region Metode za validaciju podataka
-
-        /// <summary>
-        /// Metoda za provjeru postoji li već tip odsustva s posla u bazi podataka
-        /// </summary>
-        private async Task<bool> CheckIfLeaveTypeNameExists(string name)
-        {
-            var nameLowercase = name.ToLower();
-
-            //Dohvat određenog podatka sa baze:
-            //SELECT * FROM LeaveTypes WHERE Name = 'Bolovanje';
-            return await _context.LeaveTypes.AnyAsync(x => x.Name.ToLower().Equals(nameLowercase));
-        }
-
-        /// <summary>
-        /// TRUE = Leave type objekt sa tim nazivom VEĆ postoji na bazi i ima drugačiji ID od sloga kojeg mi pokušavamo ažurirati
-        /// </summary>
-        private async Task<bool> NameAlreadyExistsInTheDatabaseUnderDifferentID(LeaveTypeEditVM editedObject)
-        {
-            //Ako se mijenja ID=5 gdje je naziv="Vacation" u naziv="Bolovanje" ali Bolovanje (sa ID=7) već postoji na bazi --> vrati TRUE!
-            var editedNameLowercase = editedObject.Name.ToLower();
-
-            //Ako se na bazi pronađe slog sa istim nazivom ALI drugačijim ID-em onda se vraća TRUE:
-            return await _context.LeaveTypes.AnyAsync(x => x.Name.ToLower().Equals(editedNameLowercase) && x.Id != editedObject.Id);
-        }
-        #endregion
     }
 }

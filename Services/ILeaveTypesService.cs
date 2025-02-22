@@ -12,5 +12,8 @@ namespace LeaveManagementSystem.Web.Services
         Task<IEnumerable<LeaveTypeReadOnlyVM>> GetAllRecords();
         Task<T?> GetRecordAsync<T>(int id) where T : class;
         Task UpdateRecordInDatabase(LeaveTypeEditVM viewModelRecord);
+        Task<bool> CheckIfLeaveTypeNameExists(string name);
+        Task<bool> NameAlreadyExistsInTheDatabaseUnderDifferentID(LeaveTypeEditVM editedObject);
+        bool LeaveTypeExists(int id);
     }
 }
