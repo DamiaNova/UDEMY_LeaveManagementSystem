@@ -10,6 +10,7 @@ using LeaveManagementSystem.Web.Models.LeaveTypes;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Manage.Internal;
 using LeaveManagementSystem.Web.MappingProfiles;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace LeaveManagementSystem.Web.Controllers
 {
@@ -37,6 +38,12 @@ namespace LeaveManagementSystem.Web.Controllers
             _context = context;
             _autoMapper = autoMapper;
         }
+        #endregion
+
+        #region Fields, properties
+
+        private const string _nameExistsValidationMessage = "This leave type already exists in the database!";
+
         #endregion
 
         /// <summary>
@@ -111,12 +118,13 @@ namespace LeaveManagementSystem.Web.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken] //zaštita od cross-referencing napada
-        public async Task<IActionResult> Create([Bind("Name,NumberOfDays")] LeaveTypeCreateVM viewModelData) //ili Create(LeaveTypeCreateVM viewModelData)
+        public async Task<IActionResult> Create(LeaveTypeCreateVM viewModelData)
         {
-            //Primjer kreiranja dodatne validacije:
-            if (viewModelData.Name.Contains("Vacation"))
+            //Provjera da li vrsta odsustva s posla već postoji u bazi prije dodavanja:
+            //Npr. ako u bazi već postoji vrsta "Bolovanje" onda nema potrebe za novim dodavanjem
+            if (await CheckIfLeaveTypeNameExists(viewModelData.Name))
             {
-                ModelState.AddModelError(nameof(viewModelData.Name), "Name should not contain \"Vacation\"!");
+                ModelState.AddModelError(nameof(viewModelData.Name), _nameExistsValidationMessage);
             }
 
             if (ModelState.IsValid) //server-side validation
@@ -174,6 +182,12 @@ namespace LeaveManagementSystem.Web.Controllers
             if (id != viewModel.Id)
             {
                 return NotFound();
+            }
+
+            //Provjera da li se editira objekt tipa ako se mijenja iz "Vacation",ID=5 u "Bolovanje",ID=5 a recimo da Bolovanje-slog već postoji u bazi:
+            if (await NameAlreadyExistsInTheDatabaseUnderDifferentID(viewModel))
+            {
+                ModelState.AddModelError(nameof(viewModel.Name), _nameExistsValidationMessage);
             }
 
             //Prvo se validiraju uneseni podaci sa forme:
@@ -266,5 +280,32 @@ namespace LeaveManagementSystem.Web.Controllers
         {
             return _context.LeaveTypes.Any(e => e.Id == id);
         }
+
+        #region Metode za validaciju podataka
+
+        /// <summary>
+        /// Metoda za provjeru postoji li već tip odsustva s posla u bazi podataka
+        /// </summary>
+        private async Task<bool> CheckIfLeaveTypeNameExists(string name)
+        {
+            var nameLowercase = name.ToLower();
+
+            //Dohvat određenog podatka sa baze:
+            //SELECT * FROM LeaveTypes WHERE Name = 'Bolovanje';
+            return await _context.LeaveTypes.AnyAsync(x => x.Name.ToLower().Equals(nameLowercase));
+        }
+
+        /// <summary>
+        /// TRUE = Leave type objekt sa tim nazivom VEĆ postoji na bazi i ima drugačiji ID od sloga kojeg mi pokušavamo ažurirati
+        /// </summary>
+        private async Task<bool> NameAlreadyExistsInTheDatabaseUnderDifferentID(LeaveTypeEditVM editedObject)
+        {
+            //Ako se mijenja ID=5 gdje je naziv="Vacation" u naziv="Bolovanje" ali Bolovanje (sa ID=7) već postoji na bazi --> vrati TRUE!
+            var editedNameLowercase = editedObject.Name.ToLower();
+
+            //Ako se na bazi pronađe slog sa istim nazivom ALI drugačijim ID-em onda se vraća TRUE:
+            return await _context.LeaveTypes.AnyAsync(x => x.Name.ToLower().Equals(editedNameLowercase) && x.Id != editedObject.Id);
+        }
+        #endregion
     }
 }
