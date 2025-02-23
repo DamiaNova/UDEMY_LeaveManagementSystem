@@ -4,7 +4,7 @@
 
 <ul class="navbar-nav">
 @if (SignInManager.IsSignedIn(User))
-{
+{ @* Ako je korisnik već autentificiran: *@
     <li class="nav-item">
         <a  class="nav-link text-light" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @User.Identity?.Name!</a>
     </li>
@@ -14,7 +14,7 @@
         </form>
     </li>
 }
-else
+else @* Ako korisnik nije autentificiran: *@
 {
     <li class="nav-item">
         <a class="nav-link text-light" asp-area="Identity" asp-page="/Account/Register">Register</a>
