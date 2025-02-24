@@ -12,7 +12,7 @@ namespace LeaveManagementSystem.Web.Data
     /// Pristup toj baznoj klasi imamo zahvaljujući instalaciji odgovarajućeg NuGet paketa
     /// Nasljeđujemo od IdentityDbContext klase zato što samo za Authentification type odabrali 'Individual accounts'
     /// </summary>
-    public class ApplicationDbContext : IdentityDbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         /// <summary>
         /// Custom konstruktor koji prosljeđuje ulazni parametar konstruktoru bazne kase
@@ -63,12 +63,12 @@ namespace LeaveManagementSystem.Web.Data
 
             //NE RADI korištenje hashera zato što javlja grešku:
             //"The model for context 'ApplicationDbContext' changes each time it is built. This is usually caused by dynamic values used in a 'HasData' call"
-            //var hasher = new PasswordHasher<IdentityUser>();
+            //var hasher = new PasswordHasher<ApplicationUser>();
             //var lozinka = hasher.HashPassword(null, "Password1@");
 
-            //Data-seeding proces sa postavljanje inicijalnog korisnika (insanca klase IdentityUser):
-            builder.Entity<IdentityUser>().HasData(
-                new IdentityUser
+            //Data-seeding proces sa postavljanje inicijalnog korisnika (insanca izvedene klase ApplicationUser):
+            builder.Entity<ApplicationUser>().HasData(
+                new ApplicationUser
                 {
                     Id = "a0c89e17-6dae-4d39-b35c-0d54a8dad74e",
                     Email = "admin@localhost.com",
@@ -76,7 +76,12 @@ namespace LeaveManagementSystem.Web.Data
                     NormalizedUserName = "ADMIN@LOCALHOST.COM",
                     UserName = "admin@localhost.com",
                     PasswordHash = "AQAAAAIAAYagAAAAEEr1h1mY9FjUylM1az+zXrrcHcPZ5g/NC/6j1smENaJgPqIjH1KPjoU0MepWy9lHxA==", // hardkodirani hash
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+
+                    //Dodatni properties iz izvedene klase:
+                    FirstName = "Mia",
+                    LastName = "Blažeković",
+                    DateOfBirth = new DateOnly(1997,02,27)
                 }
             );
 
