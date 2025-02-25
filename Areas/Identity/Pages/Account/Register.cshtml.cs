@@ -6,6 +6,7 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
 {
     public class RegisterModel : PageModel
     {
+        #region Fields, Dependency injection
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUserStore<ApplicationUser> _userStore;
@@ -27,78 +28,91 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
             _logger = logger;
             _emailSender = emailSender;
         }
+        #endregion
 
         /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
+        /// Property koji se koristi za rad sa FORM dijelom Razor pagea za registraciju
         /// </summary>
         [BindProperty]
         public InputModel Input { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public string ReturnUrl { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public IList<AuthenticationScheme> ExternalLogins { get; set; }
 
         /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
+        /// Klasa koja se koristi za rad sa FORM dijelom Razor pagea za registraciju
         /// </summary>
         public class InputModel
         {
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
             [Required]
             [EmailAddress]
             [Display(Name = "Email")]
             public string Email { get; set; }
 
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
             [Required]
             [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
             [DataType(DataType.Password)]
             [Display(Name = "Password")]
             public string Password { get; set; }
 
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
             [DataType(DataType.Password)]
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
+
+            //Novi elementi na ekranu za registraciju korisnika:
+            [Required]
+            [StringLength(20, ErrorMessage = $"First name must be at least 1 and at max 20 characters long.", MinimumLength = 1)]
+            [Display(Name = "First name")]
+            public string FirstName { get; set; }
+
+            [Required]
+            [StringLength(20, ErrorMessage = $"Last name must be at least 1 and at max 20 characters long.", MinimumLength = 1)]
+            [Display(Name = "Last name")]
+            public string LastName { get; set; }
+
+            [Required]
+            [DataType(DataType.Date)]
+            [Display(Name = "Date of birth")]
+            public DateOnly DateOfBirth { get; set; }
         }
 
-
+        #region Methods
+        /// <summary>
+        /// GET metoda
+        /// </summary>
         public async Task OnGetAsync(string returnUrl = null)
         {
             ReturnUrl = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         }
 
+        /// <summary>
+        /// POST metoda
+        /// </summary>
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
             if (ModelState.IsValid)
             {
+                //Kod kreacije User instance ne postavljaju se vrijednosti novih polja?
                 var user = CreateUser();
 
+                //Rješenje: RUČNO postaviti vrijednosti novih polja u instancu:
+                user.FirstName = Input.FirstName;
+                user.LastName = Input.LastName;
+                user.DateOfBirth = Input.DateOfBirth;
+
+                //Postavljanje korisničkog imena (username je zapravo email adresa)
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+
+                //Postavljanje emaila:
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+
+                //Kreiranje novog korisnika sa lozinkom (nakon validacije svih podataka o korisniku):
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
@@ -108,12 +122,15 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+                    //Nakon uspješne registracije, korisnika se preusmjerava na stranicu za potvrdu email adrese:
                     var callbackUrl = Url.Page(
                         "/Account/ConfirmEmail",
                         pageHandler: null,
                         values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
+                    //Slanje maila za potvrdu:
                     await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
                         $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
@@ -121,13 +138,15 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
                     {
                         return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
                     }
-                    else
+                    else //Ako potvrda email adrese nije potrebna onda korisnika samo ulogiraj:
                     {
                         await _signInManager.SignInAsync(user, isPersistent: false);
+
+                        //Ako smo prije registracije bili na nekoj stranici unutar aplikacije onda nas se vraća na tu stranicu:
                         return LocalRedirect(returnUrl);
                     }
                 }
-                foreach (var error in result.Errors)
+                foreach (var error in result.Errors) //Ako je prekršena neka validacija:
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
@@ -137,10 +156,14 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
             return Page();
         }
 
+        /// <summary>
+        /// Metoda koja dodaje novog korisnika u tablicu na bazi ako su podaci OK
+        /// </summary>
         private ApplicationUser CreateUser()
         {
             try
             {
+                //Instanciranje data-modela ApplicationUser:
                 return Activator.CreateInstance<ApplicationUser>();
             }
             catch
@@ -159,5 +182,6 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
             }
             return (IUserEmailStore<ApplicationUser>)_userStore;
         }
+        #endregion
     }
 }
